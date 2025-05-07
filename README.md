@@ -51,7 +51,7 @@ final readonly class Client
     {
         return $this
             ->connection
-            ->resolve(new TimeoutCancellation(10))
+            ->await(new TimeoutCancellation(10))
             ->query($query);
     }
 
@@ -60,14 +60,4 @@ final readonly class Client
         // ...
     }
 }
-```
-
-Alternatively, you can use `once` in a functional style:
-
-```php
-use function Thesis\Sync\once;
-
-$connectionOnce = once(static fn (): Connection => /* ... */);
-
-$result = $connectionOnce(new TimeoutCancellation(10))->query('...');
 ```
