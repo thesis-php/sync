@@ -15,40 +15,27 @@ composer require thesis/sync-once
 
 ```php
 use Amp\TimeoutCancellation;
+use Thesis\Amqp;
 use Thesis\Sync\Once;
-
-final readonly class Message {}
-
-final readonly class Client
-{
-    public function channel(): Channel {}
-}
-
-final readonly class Channel
-{
-    public function isClosed(): bool {}
-
-    public function publish(Message $message): void {}
-}
 
 final readonly class Transport
 {
     /**
-     * @var Once<Channel>
+     * @var Once<Amqp\Channel>
      */
     private Once $publishChannel;
 
     public function __construct(
-        private Client $client,
+        private Amqp\Client $client,
     ) {
         $this->publishChannel = new Once(
             // make sure to use static closures to avoid circular references
-            function: static fn (): Channel => $client->channel(),
-            isAlive: static fn (Channel $channel): bool => !$channel->isClosed(),
+            function: static fn (): Amqp\Channel => $client->channel(),
+            isAlive: static fn (Amqp\Channel $channel): bool => !$channel->isClosed(),
         );
     }
 
-    public function publish(Message $message): void
+    public function publish(Amqp\Message $message): void
     {
         $this
             ->publishChannel
