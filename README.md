@@ -1,4 +1,4 @@
-# Thesis Sync
+# Thesis Sync Once
 
 [![PHP Version Requirement](https://img.shields.io/packagist/dependency-v/thesis/sync/php)](https://packagist.org/packages/thesis/sync)
 [![GitHub Release](https://img.shields.io/github/v/release/thesis-php/sync)](https://github.com/thesis-php/sync/releases)
@@ -11,9 +11,7 @@
 composer require thesis/sync-once
 ```
 
-## Once
-
-### Usage
+## Usage
 
 ```php
 use Amp\TimeoutCancellation;
