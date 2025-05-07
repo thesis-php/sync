@@ -1,6 +1,6 @@
 {
-    "name": "thesis/sync",
-    "description": "Thesis Sync",
+    "name": "thesis/sync-once",
+    "description": "Thesis Sync Once",
     "license": "MIT",
     "type": "library",
     "authors": [
