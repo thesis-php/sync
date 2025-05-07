@@ -7,6 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.1] 2025-05-07
 
-## Changed
+### Changed
 
 - Rename `Once::$factory` to `Once::$function`.
