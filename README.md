@@ -8,7 +8,7 @@
 ## Installation
 
 ```shell
-composer require thesis/sync
+composer require thesis/sync-once
 ```
 
 ## Once
