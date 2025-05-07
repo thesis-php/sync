@@ -25,7 +25,10 @@
     "autoload": {
         "psr-4": {
             "Thesis\\Sync\\": "src/"
-        }
+        },
+        "files": [
+            "src/once.fn.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

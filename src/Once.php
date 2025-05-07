@@ -25,19 +25,27 @@ final class Once
     private mixed $value = null;
 
     /**
-     * @var \Closure(T): bool
+     * @var callable(T): bool
      */
-    private readonly \Closure $isAlive;
+    private readonly mixed $isAlive;
 
     /**
-     * @param \Closure(): T $factory
-     * @param ?\Closure(T): bool $isAlive
+     * @param callable(): T $factory
+     * @param ?callable(T): bool $isAlive
      */
     public function __construct(
-        private readonly \Closure $factory,
-        ?\Closure $isAlive = null,
+        private readonly mixed $factory,
+        mixed $isAlive = null,
     ) {
         $this->isAlive = $isAlive ?? static fn(): true => true;
+    }
+
+    /**
+     * @return T
+     */
+    public function __invoke(?Cancellation $cancellation = null): mixed
+    {
+        return $this->resolve($cancellation);
     }
 
     /**

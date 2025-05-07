@@ -57,7 +57,17 @@ final readonly class Client
 
     private function doConnect(): Connection
     {
-        // ... connection logic
+        // ...
     }
 }
+```
+
+Alternatively, you can use `once` in a functional style:
+
+```php
+use function Thesis\Sync\once;
+
+$connectionOnce = once(static fn (): Connection => /* ... */);
+
+$result = $connectionOnce(new TimeoutCancellation(10))->query('...');
 ```
