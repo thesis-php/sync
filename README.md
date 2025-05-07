@@ -17,45 +17,43 @@ composer require thesis/sync-once
 use Amp\TimeoutCancellation;
 use Thesis\Sync\Once;
 
-final readonly class Connection
-{
-    public function isAlive(): bool
-    {
-        // ...
-    }
-
-    public function query(string $query): mixed
-    {
-        // ...
-    }
-}
+final readonly class Message {}
 
 final readonly class Client
 {
-    /**
-     * @var Once<Connection>
-     */
-    private Once $connection;
+    public function channel(): Channel {}
+}
 
-    public function __construct()
-    {
-        $this->connection = new Once(
-            function: $this->doConnect(...),
-            isAlive: static fn (Connection $connection): bool => $connection->isAlive(),
+final readonly class Channel
+{
+    public function isClosed(): bool {}
+
+    public function publish(Message $message): void {}
+}
+
+final readonly class Transport
+{
+    /**
+     * @var Once<Channel>
+     */
+    private Once $publishChannel;
+
+    public function __construct(
+        private Client $client,
+    ) {
+        $this->publishChannel = new Once(
+            // make sure to use static closures to avoid circular references
+            function: static fn (): Channel => $client->channel(),
+            isAlive: static fn (Channel $channel): bool => !$channel->isClosed(),
         );
     }
 
-    public function query(string $query): mixed
+    public function publish(Message $message): void
     {
-        return $this
-            ->connection
+        $this
+            ->publishChannel
             ->await(new TimeoutCancellation(10))
-            ->query($query);
-    }
-
-    private function doConnect(): Connection
-    {
-        // ...
+            ->publish($message);
     }
 }
 ```
