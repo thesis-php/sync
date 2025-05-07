@@ -36,7 +36,6 @@ final class Once
     public function __construct(
         private readonly \Closure $factory,
         ?\Closure $isAlive = null,
-        private readonly ?Cancellation $defaultCancellation = null,
     ) {
         $this->isAlive = $isAlive ?? static fn(): true => true;
     }
@@ -53,7 +52,7 @@ final class Once
         $this->future ??= async($this->factory);
 
         try {
-            return $this->value = $this->future->await($cancellation ?? $this->defaultCancellation);
+            return $this->value = $this->future->await($cancellation);
         } finally {
             $this->future = null;
         }
