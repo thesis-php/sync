@@ -40,7 +40,7 @@ final readonly class Client
     public function __construct()
     {
         $this->connection = new Once(
-            factory: $this->doConnect(...),
+            function: $this->doConnect(...),
             isAlive: static fn (Connection $connection): bool => $connection->isAlive(),
         );
     }

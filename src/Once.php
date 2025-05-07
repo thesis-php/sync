@@ -30,11 +30,11 @@ final class Once
     private readonly mixed $isAlive;
 
     /**
-     * @param \Closure(): T $factory
+     * @param \Closure(): T $function
      * @param ?\Closure(T): bool $isAlive
      */
     public function __construct(
-        private readonly \Closure $factory,
+        private readonly \Closure $function,
         ?\Closure $isAlive = null,
     ) {
         $this->isAlive = $isAlive ?? static fn(): true => true;
@@ -49,7 +49,7 @@ final class Once
             return $this->value;
         }
 
-        $this->future ??= async($this->factory);
+        $this->future ??= async($this->function);
 
         try {
             return $this->value = $this->future->await($cancellation);
