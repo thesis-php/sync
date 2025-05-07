@@ -1,6 +1,6 @@
 {
-    "name": "thesis/template",
-    "description": "Thesis Template",
+    "name": "thesis/sync",
+    "description": "Thesis Sync",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -14,7 +14,8 @@
         }
     ],
     "require": {
-        "php": "^8.3"
+        "php": "^8.3",
+        "amphp/amp": "^3.1"
     },
     "require-dev": {
         "bamarni/composer-bin-plugin": "^1.8.2",
@@ -23,12 +24,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Thesis\\Template\\": "src/"
+            "Thesis\\Sync\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Thesis\\Template\\": "tests/"
+            "Thesis\\Sync\\": "tests/"
         }
     },
     "config": {
@@ -55,7 +56,6 @@
         "normalize": "@composer bin composer-normalize normalize --diff ../../composer.json",
         "phpstan": "tools/phpstan/vendor/bin/phpstan analyze",
         "pre-command-run": "mkdir -p var",
-        "psalm": "tools/psalm/vendor/bin/psalm --show-info --no-diff --no-cache",
         "rector": "tools/rector/vendor/bin/rector process",
         "test": "phpunit"
     }
