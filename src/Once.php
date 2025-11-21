@@ -24,11 +24,6 @@ final class Once
      */
     private mixed $value;
 
-    /**
-     * @var \Closure(T): bool
-     */
-    private readonly mixed $isAlive;
-
     private bool $isResolved = false;
 
     /**
@@ -36,18 +31,16 @@ final class Once
      * @param ?\Closure(T): bool $isAlive
      */
     public function __construct(
-        private readonly \Closure $function,
-        ?\Closure $isAlive = null,
-    ) {
-        $this->isAlive = $isAlive ?? static fn(): true => true;
-    }
+        private \Closure $function,
+        private readonly ?\Closure $isAlive = null,
+    ) {}
 
     /**
      * @return T
      */
     public function await(?Cancellation $cancellation = null): mixed
     {
-        if ($this->isResolved && ($this->isAlive)($this->value)) {
+        if ($this->isResolved && ($this->isAlive === null || ($this->isAlive)($this->value))) {
             return $this->value;
         }
 
@@ -62,6 +55,10 @@ final class Once
         }
 
         $this->isResolved = true;
+
+        if ($this->isAlive === null) {
+            $this->function = static fn() => throw new \LogicException('Function has been freed from memory');
+        }
 
         return $this->value;
     }
