@@ -51,6 +51,8 @@ final class Once
             return $this->value;
         }
 
+        $this->isResolved = false;
+
         $this->future ??= async($this->function);
 
         try {
