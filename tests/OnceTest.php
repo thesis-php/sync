@@ -67,4 +67,18 @@ final class OnceTest extends TestCase
         self::assertSame(2, $once->await());
         self::assertSame(2, $once->await());
     }
+
+    public function testFunctionIsFreedIfIsAliveIsNull(): void
+    {
+        $value = new \stdClass();
+        $weakValue = \WeakReference::create($value);
+        $once = new Once(static fn() => $value::class);
+        unset($value);
+
+        self::assertNotNull($weakValue->get());
+
+        $once->await();
+
+        self::assertNull($weakValue->get());
+    }
 }
