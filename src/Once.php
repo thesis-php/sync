@@ -20,14 +20,16 @@ final class Once
     private ?Future $future = null;
 
     /**
-     * @var ?T
+     * @var T
      */
-    private mixed $value = null;
+    private mixed $value;
 
     /**
      * @var \Closure(T): bool
      */
     private readonly mixed $isAlive;
+
+    private bool $isResolved = false;
 
     /**
      * @param \Closure(): T $function
@@ -45,16 +47,20 @@ final class Once
      */
     public function await(?Cancellation $cancellation = null): mixed
     {
-        if ($this->value !== null && ($this->isAlive)($this->value)) {
+        if ($this->isResolved && ($this->isAlive)($this->value)) {
             return $this->value;
         }
 
         $this->future ??= async($this->function);
 
         try {
-            return $this->value = $this->future->await($cancellation);
+            $this->value = $this->future->await($cancellation);
         } finally {
             $this->future = null;
         }
+
+        $this->isResolved = true;
+
+        return $this->value;
     }
 }
