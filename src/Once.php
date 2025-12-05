@@ -21,6 +21,7 @@ final class Once
 
     /**
      * @var T
+     * @phpstan-ignore property.uninitialized
      */
     private mixed $value;
 
