@@ -10,6 +10,7 @@ use function Amp\async;
 
 /**
  * @api
+ *
  * @template T
  */
 final class Once
