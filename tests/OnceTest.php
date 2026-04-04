@@ -4,71 +4,54 @@ declare(strict_types=1);
 
 namespace Thesis\Sync;
 
-use Amp\DeferredFuture;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use function Amp\async;
+use function Amp\delay;
+use function Amp\Future\await;
+use function Amp\Future\awaitAll;
+use function PHPUnit\Framework\assertNull;
+use function PHPUnit\Framework\assertSame;
 
 #[CoversClass(Once::class)]
 final class OnceTest extends TestCase
 {
-    public function testReturnsOnceSameValue(): void
+    public function testItMemoizesValue(): void
     {
-        /** @var DeferredFuture<null> */
-        $deferred = new DeferredFuture();
-        $once = new Once(static function () use ($deferred): string {
-            $deferred->getFuture()->await();
+        $once = new Once(static function (): string {
+            delay(0.01);
 
             return random_bytes(8);
         });
-        $future1 = async(static fn() => $once->await());
-        $future2 = async(static fn() => $once->await());
 
-        async(static function () use ($deferred, $future1, $future2): void {
-            self::assertFalse($future1->isComplete());
-            self::assertFalse($future2->isComplete());
+        /** @phpstan-ignore offsetAccess.notFound, offsetAccess.notFound */
+        [$value1, $value2] = await([
+            async(static fn() => $once->await()),
+            async(static fn() => $once->await()),
+        ]);
 
-            $deferred->complete();
-
-            self::assertSame($future1->await(), $future2->await());
-        })->await();
+        assertSame($value1, $value2);
     }
 
-    public function testWorksWithNull(): void
+    public function testItMemoizesException(): void
     {
-        /** @var DeferredFuture<null> */
-        $deferred = new DeferredFuture();
-        $once = new Once(static fn(): null => $deferred->getFuture()->await());
-        $future = async(static fn() => $once->await());
+        $once = new Once(static function (): never {
+            delay(0.01);
 
-        async(static function () use ($deferred, $future): void {
-            self::assertFalse($future->isComplete());
+            throw new \RuntimeException(random_bytes(8));
+        });
 
-            $deferred->complete();
+        /** @phpstan-ignore offsetAccess.notFound, offsetAccess.notFound */
+        [$error1, $error2] = awaitAll([
+            async(static fn() => $once->await()),
+            async(static fn() => $once->await()),
+        ])[0];
 
-            self::assertNull($future->await());
-        })->await();
+        /** @phpstan-ignore deadCode.unreachable */
+        assertSame($error1, $error2);
     }
 
-    public function testIsAlive(): void
-    {
-        $once = new Once(
-            static function (): int {
-                /** @var int */
-                static $i = 0;
-
-                return ++$i;
-            },
-            static fn(int $i): bool => $i > 1,
-        );
-
-        self::assertSame(1, $once->await());
-        self::assertSame(2, $once->await());
-        self::assertSame(2, $once->await());
-        self::assertSame(2, $once->await());
-    }
-
-    public function testFunctionIsFreedIfIsAliveIsNull(): void
+    public function testItFreesFunctionWhenComplete(): void
     {
         $value = new \stdClass();
         $weakValue = \WeakReference::create($value);
@@ -80,5 +63,24 @@ final class OnceTest extends TestCase
         $once->await();
 
         self::assertNull($weakValue->get());
+    }
+
+    public function testItIsGarbageCollected(): void
+    {
+        $enabled = gc_enabled();
+
+        if ($enabled) {
+            gc_disable();
+        }
+
+        try {
+            $weakOnce = \WeakReference::create(new Once(static fn() => true));
+
+            assertNull($weakOnce->get());
+        } finally {
+            if ($enabled) {
+                gc_enable();
+            }
+        }
     }
 }

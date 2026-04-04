@@ -11,55 +11,61 @@ use function Amp\async;
 /**
  * @api
  *
- * @template T
+ * @template-covariant T
  */
 final class Once
 {
     /**
-     * @var ?Future<T>
+     * @var ?Future<void>
      */
-    private ?Future $future = null;
+    private ?Future $state;
 
     /**
      * @var T
-     * @phpstan-ignore property.uninitialized
+     * @phpstan-ignore property.uninitializedReadonly
      */
-    private mixed $value;
-
-    private bool $isResolved = false;
+    private readonly mixed $value;
 
     /**
-     * @param \Closure(): T $function
-     * @param ?\Closure(T): bool $isAlive
+     * @phpstan-ignore property.uninitializedReadonly
      */
-    public function __construct(
-        private \Closure $function,
-        private readonly ?\Closure $isAlive = null,
-    ) {}
+    private readonly \Throwable $error;
+
+    /**
+     * @param-later-invoked-callable $function
+     * @param callable(): T $function
+     */
+    public function __construct(callable $function)
+    {
+        $weakThis = \WeakReference::create($this);
+
+        /** @phpstan-ignore assign.propertyType */
+        $this->state = async(static function () use ($function, $weakThis): void {
+            $once = $weakThis->get();
+
+            if ($once === null) {
+                return;
+            }
+
+            try {
+                $once->value = $function();
+            } catch (\Throwable $error) {
+                $once->error = $error;
+            } finally {
+                $once->state = null;
+            }
+        });
+    }
 
     /**
      * @return T
      */
     public function await(?Cancellation $cancellation = null): mixed
     {
-        if ($this->isResolved && ($this->isAlive === null || ($this->isAlive)($this->value))) {
-            return $this->value;
-        }
+        $this->state?->await($cancellation);
 
-        $this->isResolved = false;
-
-        $this->future ??= async($this->function);
-
-        try {
-            $this->value = $this->future->await($cancellation);
-        } finally {
-            $this->future = null;
-        }
-
-        $this->isResolved = true;
-
-        if ($this->isAlive === null) {
-            $this->function = static fn() => throw new \LogicException('Function has been freed from memory');
+        if (isset($this->error)) {
+            throw $this->error;
         }
 
         return $this->value;

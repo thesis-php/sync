@@ -14,7 +14,7 @@
         }
     ],
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "amphp/amp": "^3.1"
     },
     "require-dev": {
