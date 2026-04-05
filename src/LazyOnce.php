@@ -18,10 +18,6 @@ final class LazyOnce
      */
     private \Closure|Once $state;
 
-    public bool $isInitialized {
-        get => $this->state instanceof Once;
-    }
-
     /**
      * @param-later-invoked-callable $function
      * @param callable(): T $function

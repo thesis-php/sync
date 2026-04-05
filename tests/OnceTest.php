@@ -12,7 +12,6 @@ use function Amp\delay;
 use function Amp\Future\await;
 use function Amp\Future\awaitAll;
 use function PHPUnit\Framework\assertFalse;
-use function PHPUnit\Framework\assertInstanceOf;
 use function PHPUnit\Framework\assertNull;
 use function PHPUnit\Framework\assertSame;
 use function PHPUnit\Framework\assertTrue;
@@ -116,22 +115,15 @@ final class OnceTest extends TestCase
     public function testLazyOnceIsLazy(): void
     {
         $called = false;
-        $once = new LazyOnce(static function () use (&$called, &$once): string {
-            assertInstanceOf(LazyOnce::class, $once);
-            assertTrue($once->isInitialized);
-
+        $once = new LazyOnce(static function () use (&$called): void {
             $called = true;
-
-            return 'value';
         });
 
         assertFalse($called);
-        assertFalse($once->isInitialized);
 
         $once->await();
 
         /** @phpstan-ignore function.impossibleType */
         assertTrue($called);
-        assertTrue($once->isInitialized);
     }
 }
