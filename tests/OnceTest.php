@@ -5,28 +5,20 @@ declare(strict_types=1);
 namespace Thesis\Sync;
 
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use function Amp\async;
 use function Amp\delay;
 use function Amp\Future\await;
 use function Amp\Future\awaitAll;
-use function PHPUnit\Framework\assertFalse;
 use function PHPUnit\Framework\assertNull;
 use function PHPUnit\Framework\assertSame;
-use function PHPUnit\Framework\assertTrue;
 
 #[CoversClass(Once::class)]
-#[CoversClass(LazyOnce::class)]
 final class OnceTest extends TestCase
 {
-    /**
-     * @param class-string<Once<*>|LazyOnce<*>> $class
-     */
-    #[DataProvider('provideClasses')]
-    public function testItMemoizesValue(string $class): void
+    public function testItMemoizesValue(): void
     {
-        $once = new $class(static function (): string {
+        $once = new Once(static function (): string {
             delay(0.01);
 
             return random_bytes(8);
@@ -41,13 +33,9 @@ final class OnceTest extends TestCase
         assertSame($value1, $value2);
     }
 
-    /**
-     * @param class-string<Once<*>|LazyOnce<*>> $class
-     */
-    #[DataProvider('provideClasses')]
-    public function testItMemoizesException(string $class): void
+    public function testItMemoizesException(): void
     {
-        $once = new $class(static function (): never {
+        $once = new Once(static function (): never {
             delay(0.01);
 
             throw new \RuntimeException(random_bytes(8));
@@ -59,18 +47,15 @@ final class OnceTest extends TestCase
             async(static fn() => $once->await()),
         ])[0];
 
+        /** @phpstan-ignore deadCode.unreachable */
         assertSame($error1, $error2);
     }
 
-    /**
-     * @param class-string<Once<*>|LazyOnce<*>> $class
-     */
-    #[DataProvider('provideClasses')]
-    public function testItFreesFunctionWhenComplete(string $class): void
+    public function testItFreesFunctionWhenComplete(): void
     {
         $value = new \stdClass();
         $weakValue = \WeakReference::create($value);
-        $once = new $class(static fn() => $value::class);
+        $once = new Once(static fn() => $value::class);
         unset($value);
 
         self::assertNotNull($weakValue->get());
@@ -80,11 +65,7 @@ final class OnceTest extends TestCase
         self::assertNull($weakValue->get());
     }
 
-    /**
-     * @param class-string<Once<*>|LazyOnce<*>> $class
-     */
-    #[DataProvider('provideClasses')]
-    public function testItIsGarbageCollected(string $class): void
+    public function testItIsGarbageCollected(): void
     {
         $enabled = gc_enabled();
 
@@ -93,7 +74,7 @@ final class OnceTest extends TestCase
         }
 
         try {
-            $weakOnce = \WeakReference::create(new $class(static fn() => true));
+            $weakOnce = \WeakReference::create(new Once(static fn() => true));
 
             assertNull($weakOnce->get());
         } finally {
@@ -101,29 +82,5 @@ final class OnceTest extends TestCase
                 gc_enable();
             }
         }
-    }
-
-    /**
-     * @return \Generator<array{class-string}>
-     */
-    public static function provideClasses(): iterable
-    {
-        yield [Once::class];
-        yield [LazyOnce::class];
-    }
-
-    public function testLazyOnceIsLazy(): void
-    {
-        $called = false;
-        $once = new LazyOnce(static function () use (&$called): void {
-            $called = true;
-        });
-
-        assertFalse($called);
-
-        $once->await();
-
-        /** @phpstan-ignore function.impossibleType */
-        assertTrue($called);
     }
 }
