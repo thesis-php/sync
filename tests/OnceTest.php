@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Thesis\Sync;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\TestCase;
+use Testo\Assert;
+use Testo\Codecov\Covers;
+use Testo\Test;
 use function Amp\async;
 use function Amp\delay;
 use function Amp\Future\await;
 use function Amp\Future\awaitAll;
-use function PHPUnit\Framework\assertNull;
-use function PHPUnit\Framework\assertSame;
 
-#[CoversClass(Once::class)]
-final class OnceTest extends TestCase
+#[Test]
+#[Covers(Once::class)]
+final class OnceTest
 {
-    public function testItMemoizesValue(): void
+    public function itMemoizesValue(): void
     {
         $once = new Once(static function (): string {
             delay(0.01);
@@ -30,10 +30,10 @@ final class OnceTest extends TestCase
             async(static fn() => $once->await()),
         ]);
 
-        assertSame($value1, $value2);
+        Assert::same($value1, $value2);
     }
 
-    public function testItMemoizesException(): void
+    public function itMemoizesException(): void
     {
         $once = new Once(static function (): never {
             delay(0.01);
@@ -47,25 +47,24 @@ final class OnceTest extends TestCase
             async(static fn() => $once->await()),
         ])[0];
 
-        /** @phpstan-ignore deadCode.unreachable */
-        assertSame($error1, $error2);
+        Assert::same($error1, $error2);
     }
 
-    public function testItFreesFunctionWhenComplete(): void
+    public function itFreesFunctionWhenComplete(): void
     {
         $value = new \stdClass();
         $weakValue = \WeakReference::create($value);
         $once = new Once(static fn() => $value::class);
         unset($value);
 
-        self::assertNotNull($weakValue->get());
+        Assert::notNull($weakValue->get());
 
         $once->await();
 
-        self::assertNull($weakValue->get());
+        Assert::null($weakValue->get());
     }
 
-    public function testItIsGarbageCollected(): void
+    public function itIsGarbageCollected(): void
     {
         $enabled = gc_enabled();
 
@@ -76,7 +75,7 @@ final class OnceTest extends TestCase
         try {
             $weakOnce = \WeakReference::create(new Once(static fn() => true));
 
-            assertNull($weakOnce->get());
+            Assert::null($weakOnce->get());
         } finally {
             if ($enabled) {
                 gc_enable();
