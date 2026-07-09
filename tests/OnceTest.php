@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Thesis\Sync;
 
+use Amp\CancelledException;
+use Amp\TimeoutCancellation;
 use Testo\Assert;
 use Testo\Codecov\Covers;
 use Testo\Test;
@@ -48,6 +50,34 @@ final class OnceTest
         ])[0];
 
         Assert::same($error1, $error2);
+    }
+
+    public function itSupportsNullValue(): void
+    {
+        $once = new Once(static fn(): mixed => null);
+
+        Assert::null($once->await());
+        Assert::null($once->await());
+    }
+
+    public function itDoesNotDiscardFunctionWhenAwaitIsCancelled(): void
+    {
+        $once = new Once(static function (): string {
+            delay(0.01);
+
+            return 'value';
+        });
+
+        [$errors, $values] = awaitAll([
+            async(static fn() => $once->await(new TimeoutCancellation(0.001))),
+            async(static fn() => $once->await()),
+        ]);
+
+        /** @phpstan-ignore offsetAccess.notFound */
+        Assert::instanceOf($errors[0], CancelledException::class);
+        /** @phpstan-ignore offsetAccess.notFound */
+        Assert::same($values[1], 'value');
+        Assert::same($once->await(), 'value');
     }
 
     public function itFreesFunctionWhenComplete(): void
