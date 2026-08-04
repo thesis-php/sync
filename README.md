@@ -1,9 +1,12 @@
 # Thesis Sync Once
 
-[![PHP Version Requirement](https://img.shields.io/packagist/dependency-v/thesis/sync/php)](https://packagist.org/packages/thesis/sync)
-[![GitHub Release](https://img.shields.io/github/v/release/thesis-php/sync)](https://github.com/thesis-php/sync/releases)
-[![Code Coverage](https://codecov.io/gh/thesis-php/sync/branch/0.1.x/graph/badge.svg)](https://codecov.io/gh/thesis-php/sync/tree/0.1.x)
-[![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fthesis-php%2Fsync%2F0.1.x)](https://dashboard.stryker-mutator.io/reports/github.com/thesis-php/sync/0.1.x)
+[![PHP Version Requirement](https://img.shields.io/packagist/dependency-v/thesis/sync-once/php)](https://packagist.org/packages/thesis/sync-once)
+[![GitHub Release](https://img.shields.io/github/v/release/thesis-php/once-value)](https://github.com/thesis-php/once-value/releases)
+[![Code Coverage](https://codecov.io/gh/thesis-php/once-value/branch/0.2.x/graph/badge.svg)](https://codecov.io/gh/thesis-php/once-value/tree/0.2.x)
+[![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Fthesis-php%2Fonce-value%2F0.2.x)](https://dashboard.stryker-mutator.io/reports/github.com/thesis-php/once-value/0.2.x)
+
+`Once` starts a function once, shares the same running operation between awaiters,
+and memoizes either the returned value or the thrown exception.
 
 ## Installation
 
@@ -33,7 +36,6 @@ final readonly class AmqpTransport
         $this->publishChannel = new Once(
             // make sure to use static closures to avoid circular references
             function: static fn (): Channel => $client->channel(),
-            isAlive: static fn (Channel $channel): bool => !$channel->isClosed(),
         );
     }
 
